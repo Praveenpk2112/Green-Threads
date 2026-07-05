@@ -51,6 +51,8 @@ inline void GREEN_CHECK(){
 
 void watch_dog(){
     while(true){
+            GREEN_CHECK(); /* Auto-injected by Clang */
+    
         this_thread::sleep_for(chrono::milliseconds(10));
         time1 = true;
     }
@@ -77,31 +79,51 @@ void green_start(){
 }
 
 void task1(){
-
-    for(int i=1;i<=1000;i++){
+    cout << "[Task 2] Started heavy calculations!" << endl;
+    long long sum = 0;
     
-        GREEN_CHECK(); /* Auto-injected by Clang */
-    
-        cout << "Checking for loop in task1"<< endl;
+    for(long long i = 1; i <= 600000000; i++){
+            GREEN_CHECK(); /* Auto-injected by Clang */
+        
+        sum += (i * 2);
+        
+        if (i % 150000000 == 0) {
+            cout << "    [Task 2] Computing... " << (i / 6000000) << "% done" << endl;
+        }
     }
-    cout << "Starting task 1" << endl;
-    cout << "Resuming and ending task1" << endl;
+    cout << "[Task 2] Finished! (Result: " << sum << ")" << endl;
+    green_yield();
 
 }
 
 void task2(){
-
-    cout << "Starting task 2" << endl;
-    cout << "Resuming and ending task2" << endl;
+    cout << "[Task 2] Started heavy calculations!" << endl;
+    long long sum = 0;
+    
+    for(long long i = 1; i <= 600000000; i++){
+            GREEN_CHECK(); /* Auto-injected by Clang */
+        
+        sum += (i * 2);
+        
+        if (i % 150000000 == 0) {
+            cout << "    [Task 2] Computing... " << (i / 6000000) << "% done" << endl;
+        }
+    }
+    cout << "[Task 2] Finished! (Result: " << sum << ")" << endl;
+    green_yield();
     
 }
 
 int main(){
 
-    cout << "Testing green threads" << endl;
-    
-    green_spawn(task2);
+    cout << "=======================================" << endl;
+    cout << "    BOOTING GREEN OS SCHEDULER    " << endl;
+    cout << "=======================================" << endl;
     green_spawn(task1);
     green_spawn(task2);
     green_start();
+    cout << "=======================================" << endl;
+    cout << "    SHUTTING DOWN GREEN OS       " << endl;
+    cout << "=======================================" << endl;
+
 }
