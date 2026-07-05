@@ -5,13 +5,28 @@
 
 using namespace std;
 
-atomic<bool> time1 = false;
+atomic<bool> time_is_up = false;
 
 extern "C" void context_switch(void** current_thread_rsp,void* new_thread_rsp);
 
 queue<Thread*> ready_queue;
 vector<Thread*> extra;
 Thread* current_thread = nullptr;
+void green_yield();
+
+void watch_dog() {
+    while (true) {
+        this_thread::sleep_for(chrono::milliseconds(50));
+        time_is_up = true; 
+    }
+}
+
+inline void GREEN_CHECK() {
+    if (time_is_up) {
+        time_is_up = false; 
+        green_yield();
+    }
+}
 
 void green_spawn(void(*func)()){
 
@@ -37,25 +52,9 @@ void green_yield(){
     }
     Thread* prev_thread = current_thread;
     current_thread = new_thread;
-    time1 = false;
+    time_is_up = false;
     context_switch(&(prev_thread->rsp),new_thread->rsp);
 
-}
-
-inline void GREEN_CHECK(){
-    if(time1){
-        cout << "Time slice if gone Prempting Task!" << endl;
-        green_yield();
-    }
-}
-
-void watch_dog(){
-    while(true){
-            GREEN_CHECK(); /* Auto-injected by Clang */
-    
-        this_thread::sleep_for(chrono::milliseconds(10));
-        time1 = true;
-    }
 }
 
 void green_exit(){
@@ -79,19 +78,16 @@ void green_start(){
 }
 
 void task1(){
-    cout << "[Task 2] Started heavy calculations!" << endl;
+    cout << "[Task 1] Started heavy calculations!" << endl;
     long long sum = 0;
     
     for(long long i = 1; i <= 600000000; i++){
-            GREEN_CHECK(); /* Auto-injected by Clang */
+        GREEN_CHECK(); /* Auto-injected by Clang */
         
         sum += (i * 2);
-        
-        if (i % 150000000 == 0) {
-            cout << "    [Task 2] Computing... " << (i / 6000000) << "% done" << endl;
-        }
+        if(i%6000000 == 0) cout << "    [Task 1] Computing... " << (i / 6000000) << "% done" << endl;
     }
-    cout << "[Task 2] Finished! (Result: " << sum << ")" << endl;
+    cout << "[Task 1] Finished! (Result: " << sum << ")" << endl;
     green_yield();
 
 }
@@ -100,14 +96,11 @@ void task2(){
     cout << "[Task 2] Started heavy calculations!" << endl;
     long long sum = 0;
     
-    for(long long i = 1; i <= 600000000; i++){
+    for(long long i = 1; i <= 500000000; i++){
             GREEN_CHECK(); /* Auto-injected by Clang */
         
         sum += (i * 2);
-        
-        if (i % 150000000 == 0) {
-            cout << "    [Task 2] Computing... " << (i / 6000000) << "% done" << endl;
-        }
+        if(i%5000000 == 0) cout << "    [Task 2] Computing... " << (i / 5000000) << "% done" << endl;
     }
     cout << "[Task 2] Finished! (Result: " << sum << ")" << endl;
     green_yield();
