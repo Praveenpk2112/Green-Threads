@@ -45,8 +45,27 @@ This project is configured for the Windows environment using MinGW-w64 and MSYS2
 ### Step 1: Build the Clang AST Injector
 The compiler tool must be built first to parse and modify the OS source code. Open your terminal in the root directory of the project.
 
-```bash
-mkdir build
-cd build
-cmake -G Ninja ..
-ninja
+    mkdir build
+    cd build
+    cmake -G Ninja ..
+    ninja
+
+### Step 2: Inject Preemption Checkpoints
+Run the compiled LLVM tool against the main OS file. This will automatically locate all loops and inject the `GREEN_CHECK()` macro.
+
+    ./loop_injector.exe ../main.cpp -- 
+
+### Step 3: Compile and Run GreenOS
+Navigate back to the root directory and compile the C++ files along with the Assembly context switcher. We include the `-pthread` flag to enable the background monitor thread.
+
+    cd ..
+    g++ main.cpp greenthread.cpp context_switch.S -o green_os.exe -pthread
+    ./green_os.exe
+
+## Limitations and Future Work
+
+While this project successfully demonstrates a highly performant user-space scheduler, it is an educational build designed to highlight systems programming concepts.
+
+1. **Single-Core Multiplexing:** Currently, all Green Threads are multiplexed onto a single OS worker thread (running on a single CPU core). Achieving true Symmetric Multiprocessing (SMP) would require implementing work-stealing queues across multiple OS worker threads.
+2. **ABI Specificity:** The `context_switch.S` assembly code is strictly coupled to the Microsoft x64 Calling Convention (using `rcx` and `rdx`). To run this architecture on Linux or macOS (Intel), the assembly must be updated to adhere to the System V ABI (using `rdi` and `rsi`).
+3. **Network I/O:** The current asynchronous wrapper handles console input (`conio.h`). A full production implementation would require wrapping standard socket libraries using `epoll` (Linux) or I/O Completion Ports (Windows) to handle non-blocking network requests.
