@@ -1,4 +1,4 @@
-# GreenOS: User-Space Thread Scheduler and M:N Preemption
+# Green-Threads: User-Space Thread Scheduler and M:N Preemption
 
 GreenOS is a lightweight, bare-metal multithreading operating system scheduler built entirely from scratch in C++ and x86-64 Assembly. 
 
